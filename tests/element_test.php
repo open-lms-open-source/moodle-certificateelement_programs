@@ -19,10 +19,11 @@ namespace certificateelement_programs;
 /**
  * Unit tests for programs element.
  *
- * @package    certificateelement_programs
- * @copyright  2022 Open LMS (https://www.openlms.net/)
- * @author     Petr Skoda
- * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ * @group     openlms
+ * @package   certificateelement_programs
+ * @copyright 2022 Open LMS (https://www.openlms.net/)
+ * @author    Petr Skoda
+ * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 final class element_test extends \advanced_testcase {
 
