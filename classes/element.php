@@ -27,6 +27,11 @@ namespace certificateelement_programs;
 class element extends \tool_certificate\element {
 
     /**
+     * @var string $dateformat dateformat for date field.
+     */
+    private $dateformat;
+
+    /**
      * This function renders the form elements when adding a certificate element.
      *
      * @param \MoodleQuickForm $mform the edit_form instance
@@ -40,6 +45,12 @@ class element extends \tool_certificate\element {
         $mform->addElement('select', 'programfield', get_string('programfield', 'certificateelement_programs'), $fields);
         $mform->setType('programfield', PARAM_ALPHANUM);
         $mform->addHelpButton('programfield', 'programfield', 'certificateelement_programs');
+
+        $mform->addElement('select', 'dateformat', get_string('dateformat', 'certificateelement_date'),
+            \certificateelement_date\element::get_date_formats());
+        $mform->addHelpButton('dateformat', 'dateformat', 'certificateelement_date');
+
+        $mform->hideIf('dateformat', 'programfield', 'neq', 'timecompleted');
 
         parent::render_form_elements($mform);
     }
@@ -66,6 +77,9 @@ class element extends \tool_certificate\element {
      */
     public function save_form_data(\stdClass $data) {
         $data->data = $data->programfield;
+        if (isset($data->dateformat)) {
+            $data->data = json_encode(['dateitem' => $data->programfield, 'dateformat' => $data->dateformat]);
+        }
         parent::save_form_data($data);
     }
 
@@ -80,6 +94,7 @@ class element extends \tool_certificate\element {
     public function render($pdf, $preview, $user, $issue) {
         $field = $this->get_data();
 
+        $field = self::prepare_datefield($field);
         if ($preview) {
             if ($field === 'fullname') {
                 $value = 'Program 001';
@@ -91,7 +106,7 @@ class element extends \tool_certificate\element {
                 $url = new \moodle_url('/enrol/programs/catalogue/program', ['id' => 1]);
                 $value = \html_writer::link($url, $url->out(false));
             } else if ($field === 'timecompleted') {
-                $value = userdate(time());
+                $value = userdate(time(), get_string($this->dateformat, 'langconfig'));
             } else {
                 $value = $field;
                 $value = s($value);
@@ -116,7 +131,7 @@ class element extends \tool_certificate\element {
                 }
             } else if ($field === 'timecompleted') {
                 if (isset($data->programtimecompleted)) {
-                    $value = userdate($data->programtimecompleted);
+                    $value = userdate($data->programtimecompleted, get_string($this->dateformat, 'langconfig'));
                 }
             }
         }
@@ -134,7 +149,10 @@ class element extends \tool_certificate\element {
         // The value to display - we always want to show a value here so it can be repositioned.
         $fields = self::get_program_fields();
         $value = $fields[$this->get_data()] ?? $this->get_data();
-
+        $value = $this->prepare_datefield($value);
+        if ($value == 'timecompleted') {
+            $value = userdate(time(), get_string($this->dateformat, 'langconfig'));
+        }
         $value = format_string($value, true, ['context' => \context_system::instance()]);
         return \tool_certificate\element_helper::render_html_content($this, $value);
     }
@@ -148,7 +166,26 @@ class element extends \tool_certificate\element {
         $record = parent::prepare_data_for_form();
         if ($this->get_data()) {
             $record->programfield = $this->get_data();
+            $record->programfield = self::prepare_datefield($record->programfield);
+        }
+        if (isset($this->dateformat)) {
+            $record->dateformat = $this->dateformat;
         }
         return $record;
+    }
+
+    /**
+     * Prepare date field for the element - separating the format and the date item.
+     *
+     * @param string $value of the element
+     * @return string
+     */
+    private function prepare_datefield(string $value) {
+        if (strpos($value, 'timecompleted') !== false) {
+            $data = json_decode($value);
+            $this->dateformat = $data->dateformat;
+            $value = $data->dateitem;
+        }
+        return $value;
     }
 }

@@ -60,8 +60,9 @@ final class element_test extends \advanced_testcase {
         $element = $generator->create_element($pageid, 'programs', ['programfield' => 'url']);
         $this->assertStringContainsString('Program URL', $element->render_html());
 
-        $element = $generator->create_element($pageid, 'programs', ['programfield' => 'timecompleted']);
-        $this->assertStringContainsString('Program completion date', $element->render_html());
+        $element = $generator->create_element($pageid, 'programs', ['programfield' => 'timecompleted', 'dateformat' => 'strftimedate']);
+        $date = userdate(time(), '%d %B %Y');
+        $this->assertStringContainsString($date, $element->render_html());
 
         // Generate PDF for preview.
         $filecontents = $generator->generate_pdf($certificate1, true);
