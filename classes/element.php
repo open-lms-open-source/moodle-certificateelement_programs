@@ -106,7 +106,7 @@ class element extends \tool_certificate\element {
                 $url = new \moodle_url('/enrol/programs/catalogue/program', ['id' => 1]);
                 $value = \html_writer::link($url, $url->out(false));
             } else if ($field === 'timecompleted') {
-                $value = userdate(time(), get_string($this->dateformat, 'langconfig'));
+                $value = $this->get_date_format_string(time(), $this->dateformat);
             } else {
                 $value = $field;
                 $value = s($value);
@@ -131,7 +131,7 @@ class element extends \tool_certificate\element {
                 }
             } else if ($field === 'timecompleted') {
                 if (isset($data->programtimecompleted)) {
-                    $value = userdate($data->programtimecompleted, get_string($this->dateformat, 'langconfig'));
+                    $this->get_date_format_string($data->programtimecompleted, $this->dateformat);
                 }
             }
         }
@@ -151,7 +151,7 @@ class element extends \tool_certificate\element {
         $value = $fields[$this->get_data()] ?? $this->get_data();
         $value = $this->prepare_datefield($value);
         if ($value == 'timecompleted') {
-            $value = userdate(time(), get_string($this->dateformat, 'langconfig'));
+            $value = $this->get_date_format_string(time(), $this->dateformat);
         }
         $value = format_string($value, true, ['context' => \context_system::instance()]);
         return \tool_certificate\element_helper::render_html_content($this, $value);
@@ -187,5 +187,23 @@ class element extends \tool_certificate\element {
             $value = $data->dateitem;
         }
         return $value;
+    }
+
+    /**
+     * Returns the date in a readable format.
+     *
+     * @param int $date
+     * @param string $dateformat
+     * @return string
+     */
+    protected static function get_date_format_string($date, $dateformat) {
+        if ($dateformat == 'strftimedatefullshortwleadingzero') {
+            $certificatedate = userdate($date, get_string('strftimedatefullshort', 'langconfig'), 99, false);
+        } else if (get_string_manager()->string_exists($dateformat, 'langconfig')) {
+            $certificatedate = userdate($date, get_string($dateformat, 'langconfig'));
+        } else {
+            $certificatedate = userdate($date, get_string('strftimedate', 'langconfig'));
+        }
+        return $certificatedate;
     }
 }
