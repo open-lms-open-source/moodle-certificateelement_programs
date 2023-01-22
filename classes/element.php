@@ -131,7 +131,7 @@ class element extends \tool_certificate\element {
                 }
             } else if ($field === 'timecompleted') {
                 if (isset($data->programtimecompleted)) {
-                    $this->get_date_format_string($data->programtimecompleted, $this->dateformat);
+                    $value = $this->get_date_format_string($data->programtimecompleted, $this->dateformat);
                 }
             }
         }
